@@ -1,0 +1,12 @@
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Configurar chave GCP
+        run: echo "${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}" > $HOME/gcp-key.json
+
+      - name: Autenticar no GCP
+        run: gcloud auth activate-service-account --key-file=$HOME/gcp-key.json
