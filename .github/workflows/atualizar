@@ -1,21 +1,25 @@
 name: atualizar
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # permite rodar manualmente
   schedule:
-    - cron: '0 8,20 * * *'
+    - cron: '0 8,20 * * *'  # todo dia às 08:00 e 20:00 UTC
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    env:
-      GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
-      GOOGLE_SHEETS_SPREADSHEET_KEY: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_KEY }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
