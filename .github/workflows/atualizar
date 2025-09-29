@@ -1,4 +1,4 @@
-name: Atualizar Dados na Planilha
+name: atualizar
 
 on:
   workflow_dispatch:
