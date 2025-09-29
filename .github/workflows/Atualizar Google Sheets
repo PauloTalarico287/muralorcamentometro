@@ -1,40 +1,46 @@
 name: Atualizar Google Sheets
 
 on:
-  workflow_dispatch:      # permite rodar manualmente
-  schedule:               # permite rodar automaticamente
-    - cron: '0 8,20 * * *'  # todo dia às 08:00 e 20:00 UTC
+  workflow_dispatch:      # Permite rodar manualmente
+  schedule:               # Rodar automaticamente em cron
+    - cron: '0 8,20 * * *'  # Todo dia às 08:00 e 20:00 UTC
 
 jobs:
-  deploy:
+  atualizar:
     runs-on: ubuntu-latest
     env:
       GOOGLE_SHEETS_SPREADSHEET_KEY: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_KEY }}
 
     steps:
+      # 1️⃣ Clonar repositório
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Configurar GCP/GSheets de forma segura
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
 
+      # 3️⃣ Configurar Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
+      # 4️⃣ Instalar dependências
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
-          python -m pip install python-decouple
+          python -m pip install python-decouple gspread gspread_dataframe oauth2client pandas requests beautifulsoup4 openpyxl
 
+      # 5️⃣ Verificar secret sem imprimir
       - name: Verify secret length
         run: |
           echo "GOOGLE_SHEETS_CREDENTIALS has $(echo "${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}" | wc -c) characters"
 
+      # 6️⃣ Rodar script Python
       - name: Run Python script
         run: python app.py
