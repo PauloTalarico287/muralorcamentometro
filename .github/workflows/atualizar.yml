@@ -1,43 +1,21 @@
-name: Executar Scraper de Orçamento e Atualizar Planilha
+name: Deploy Orçamentômetro
 
 on:
-  schedule:
-    # Roda todo dia 1, às 2h (UTC). Mantenha este agendamento ou ajuste.
-    - cron: '0 2 1 * *' 
-  workflow_dispatch:
-    # Permite execução manual através da aba "Actions" no GitHub
+  push:
+    branches:
+      - main   # roda quando houver push na branch main
+  workflow_dispatch:  # permite rodar manualmente pelo GitHub
 
 jobs:
-  run-scraper:
+  deploy:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout do Código
-        uses: actions/checkout@v4
-
-      - name: Configurar Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          # Use uma versão estável, como Python 3.10 ou mais recente
-          python-version: '3.10' 
-
-      - name: Instalar Dependências
-        # Esta etapa usará sua lista de requisitos para instalar todas as libs
+          python-version: "3.11"
+      - name: Install dependencies
         run: pip install -r requirements.txt
-        
-      - name: Set up gcloud (Opcional)
-        # Este passo só é necessário se você estiver usando serviços avançados do GCP. 
-        # Para a autenticação do gspread via Service Account, não é estritamente necessário.
-        # Se você não o está usando, pode remover este bloco.
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }} 
-          
-      - name: Rodar Script Python
-        # ATENÇÃO: Substitua 'seu_script_principal.py' pelo nome real do seu arquivo Python
-        run: python seu_script_principal.py 
-        env:
-          # Injeta os Segredos configurados no GitHub como variáveis de ambiente
-          GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }} 
-          GOOGLE_SHEETS_SPREADSHEET_KEY: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_KEY }}
+      - name: Run script
+        run: python app.py
