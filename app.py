@@ -19,7 +19,7 @@ if response.status_code == 200:
         f.write(response.content)
 
     # Leia o arquivo Excel usando o pandas
-    df = pd.read_excel("basedadosexecucao0823.xlsx")
+    df = pd.read_excel("basedadosexecucao0925.xlsx")
 
     # Agora você pode trabalhar com os dados em 'df'
     print(df.head())
@@ -145,7 +145,7 @@ guia2.update(data_to_append2, 2)
 #OUTROS_ORGAOS
 investimento_por_outros=investimento[~investimento['Órgão'].str.contains('Subprefeitura|Secretaria')]
 pd.set_option('float_format', '{:.2f}'.format)
-investimento_por_outros['Executado (%)'] = investimento_por_outros['Realizado']/investimento_por_outros['Valor previstao para 2025']*100
+investimento_por_outros['Executado (%)'] = investimento_por_outros['Realizado']/investimento_por_outros['Valor previsto para 2025']*100
 investimento_por_outros.sort_values('Executado (%)', ascending=False)
 investimento_por_outros
 planilha = gc.open_by_key("1hURqGNnl9k4A_KhsQ4RvphmPGsJPlhq5NZpLnox0SUY")
@@ -163,7 +163,7 @@ total_por_coluna = investimento.sum()
 pd.set_option('float_format', '{:.2f}'.format)
 geral = pd.DataFrame({
     'Categoria': ['Total'],
-    'Valor previsto para 2025': total_por_coluna['Valor orçado em 2023'],
+    'Valor previsto para 2025': total_por_coluna['Valor previsto para 2025'],
     'Realizado': total_por_coluna['Realizado'],
     'Executado (%)': [(total_por_coluna['Realizado'] / total_por_coluna['Valor previsto para 2025']) * 100],
 })
