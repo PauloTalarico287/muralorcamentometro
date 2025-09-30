@@ -1,11 +1,14 @@
 name: Executar Scraper de Orçamento
 
 on:
+  # 1. Agendamento Mensal
   schedule:
-    # Este cron executa o script no dia 1 de cada mês às 02:00 UTC
+    # Roda todo dia 1, às 2h (UTC), para garantir dados novos
     - cron: '0 2 1 * *'
+    
+  # 2. Execução Manual
   workflow_dispatch:
-    # Permite que você execute manualmente no GitHub
+    # Permite que você clique em 'Run workflow' para testar ou forçar a atualização
 
 jobs:
   run-scraper:
