@@ -28,12 +28,12 @@ else:
     print("Erro ao baixar o arquivo:", response.status_code)
 
 orcamento = pd.read_excel("basedadosexecucao0925.xlsx")
-orc=orcamento[['Ds_Orgao','Ds_Programa', 'Ds_Projeto_Atividade', 'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado', 'Vl_Congelado',  'Vl_Descongelado', 'Vl_Empenhado', 'Vl_Liquidado']]
+orc=orcamento[['Ds_Orgao','Ds_Programa', 'Ds_Projeto_Atividade', 'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado', 'Vl_Congelado',  'Vl_Descongelado', 'Vl_Liquidado']]
 Gastos=orc.groupby('Ds_Orgao')
 investimento=Gastos.sum()
 investimento.sort_values('Vl_Liquidado', ascending=False)
 investimento = investimento.reset_index()
-novos = ['Órgão', 'Valor previsto para 2025', 'Realizado']
+novos = ['Órgão', 'Valor previsto para 2025', 'Valor Orçado Atualizado', 'Valor Congelado', 'Valor Descongelado', 'Realizado']
 investimento.columns = novos
 credentials_info = json.loads(os.getenv('GOOGLE_SHEETS_CREDENTIALS', default='{}'))
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
