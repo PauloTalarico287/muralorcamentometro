@@ -1,0 +1,33 @@
+name: Executar Scraper de Orçamento
+
+on:
+  schedule:
+    # Este cron executa o script no dia 1 de cada mês às 02:00 UTC
+    - cron: '0 2 1 * *'
+  workflow_dispatch:
+    # Permite que você execute manualmente no GitHub
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do Código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' 
+
+    - name: Instalar Dependências
+      run: pip install -r requirements.txt
+      # (Lembre-se de criar o arquivo requirements.txt!)
+
+    - name: Executar Script Python
+      run: python seu_script_principal.py # Troque pelo nome do seu arquivo
+      env:
+        # A MÁGICA ACONTECE AQUI!
+        # Passa o Secret seguro como uma variável de ambiente (env)
+        GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+        GOOGLE_SHEETS_SPREADSHEET_KEY: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_KEY }}
