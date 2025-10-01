@@ -10,17 +10,17 @@ from google.oauth2 import service_account
 from gspread_dataframe import get_as_dataframe, set_with_dataframe
 
 try:
-    url = "https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/2025/basedadosexecucao_0925.xlsx"
+    url = "https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/2025/basedadosexecucao_1025.xlsx"
     response = requests.get(url)
     
     # Verifique se a solicitação foi bem-sucedida
     if response.status_code == 200:
         # Salve o conteúdo do arquivo em um arquivo local
-        with open("basedadosexecucao0925.xlsx", "wb") as f:
+        with open("basedadosexecucao1025.xlsx", "wb") as f:
             f.write(response.content)
     
         # Leia o arquivo Excel usando o pandas
-        df = pd.read_excel("basedadosexecucao0925.xlsx")
+        df = pd.read_excel("basedadosexecucao1025.xlsx")
     
         # Agora você pode trabalhar com os dados em 'df'
         print(df.head())
@@ -28,7 +28,7 @@ try:
     else:
         print("Erro ao baixar o arquivo:", response.status_code)
     
-    orcamento = pd.read_excel("basedadosexecucao0925.xlsx")
+    orcamento = pd.read_excel("basedadosexecucao1025.xlsx")
     orc=orcamento[['Ds_Orgao','Ds_Programa', 'Ds_Projeto_Atividade', 'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado', 'Vl_Congelado',  'Vl_Descongelado', 'Vl_Liquidado']]
     Gastos=orc.groupby('Ds_Orgao')
     investimento=Gastos.sum()
