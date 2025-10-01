@@ -180,3 +180,11 @@ guia2.update('A2', geral['Categoria'].tolist()[0])  # Acessando o primeiro eleme
 guia2.update('B2', geral['Valor previsto para 2025'].tolist()[0])
 guia2.update('C2', geral['Realizado'].tolist()[0])
 guia2.update('D2', geral['Executado (%)'].tolist()[0])
+
+try:
+    # todo o seu código aqui
+except Exception as e:
+    print("❌ Erro:", e)
+    import traceback
+    traceback.print_exc()
+    exit(1)
