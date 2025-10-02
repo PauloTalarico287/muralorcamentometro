@@ -41,6 +41,8 @@ try:
         raise Exception("GOOGLE_SHEETS_CREDENTIALS não definido")
     credentials_json = credentials_json.replace('\\n', '\n')
     credentials_info = json.loads(credentials_json)
+    credentials_json = credentials_json.encode('utf-8').decode('unicode_escape')
+    credentials_info = json.loads(credentials_json)
     #credentials_info = json.loads(os.getenv('GOOGLE_SHEETS_CREDENTIALS', default='{}'))
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
