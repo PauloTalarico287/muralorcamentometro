@@ -46,10 +46,11 @@ try:
     # Definir escopo e criar credenciais
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     #credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
-    credentials = service_account.Credentials.from_service_account_file(
-    "service_account.json",
-    scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_info,
+        scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     )
+
    
     # Autenticar gspread
     gc = gspread.authorize(credentials)
