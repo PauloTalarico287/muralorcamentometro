@@ -36,13 +36,23 @@ try:
     investimento = investimento.reset_index()
     novos = ['Órgão', 'Valor previsto para 2025', 'Valor Orçado Atualizado', 'Valor Congelado', 'Valor Descongelado', 'Realizado']
     investimento.columns = novos
-    credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
-    if not credentials_json:
-        raise Exception("GOOGLE_SHEETS_CREDENTIALS não definido")
-    credentials_json = credentials_json.replace('\\n', '\n')
-    credentials_info = json.loads(credentials_json)
-    credentials_json = credentials_json.encode('utf-8').decode('unicode_escape')
-    credentials_info = json.loads(credentials_json)
+        # Crie um arquivo temporário a partir do secret
+    with open("service_account.json", "w") as f:
+        f.write(os.environ['GOOGLE_SHEETS_CREDENTIALS'])
+
+        # Leia o JSON do arquivo
+    with open("service_account.json") as f:
+        credentials_info = json.load(f)
+
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
+
+   # credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+    #if not credentials_json:
+        #raise Exception("GOOGLE_SHEETS_CREDENTIALS não definido")
+    #credentials_json = credentials_json.replace('\\n', '\n')
+    #credentials_info = json.loads(credentials_json)
+    #credentials_json = credentials_json.encode('utf-8').decode('unicode_escape')
     #credentials_info = json.loads(os.getenv('GOOGLE_SHEETS_CREDENTIALS', default='{}'))
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
