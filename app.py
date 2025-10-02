@@ -40,8 +40,8 @@ try:
     if not credentials_json:
         raise Exception("❌ GOOGLE_SHEETS_CREDENTIALS não definido")
 
-    # Corrigir quebras de linha e carregar JSON
-    credentials_info = json.loads(credentials_json.replace('\\n', '\n'))
+    #Corrigir quebras de linha e carregar JSON
+    credentials_info = json.loads(credentials_json)
     
     # Definir escopo e criar credenciais
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
