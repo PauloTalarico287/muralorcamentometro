@@ -3,8 +3,8 @@ name: Deploy Orçamentômetro
 on:
   push:
     branches:
-      - main   # roda quando houver push na branch main
-  workflow_dispatch:  # permite rodar manualmente pelo GitHub
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -24,4 +24,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run script
+        env:
+          GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+          GOOGLE_SHEETS_SPREADSHEET_KEY: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_KEY }}
         run: python app.py
