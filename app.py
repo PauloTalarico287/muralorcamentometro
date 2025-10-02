@@ -36,12 +36,19 @@ try:
     investimento = investimento.reset_index()
     novos = ['Órgão', 'Valor previsto para 2025', 'Valor Orçado Atualizado', 'Valor Congelado', 'Valor Descongelado', 'Realizado']
     investimento.columns = novos
-    credentials_info = json.loads(os.getenv('GOOGLE_SHEETS_CREDENTIALS', default='{}'))
+    credentials_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS')
+    if not credentials_json:
+        raise Exception("GOOGLE_SHEETS_CREDENTIALS não definido")
+    credentials_json = credentials_json.replace('\\n', '\n')
+    credentials_info = json.loads(credentials_json)
+    #credentials_info = json.loads(os.getenv('GOOGLE_SHEETS_CREDENTIALS', default='{}'))
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
     gc = gspread.authorize(credentials)
     
     spreadsheet_key = os.getenv('GOOGLE_SHEETS_SPREADSHEET_KEY')
+      if not spreadsheet_key:
+        raise Exception("GOOGLE_SHEETS_SPREADSHEET_KEY não definido")
     
     #SUBPREFEITURAS
     investimento_por_sub=investimento[investimento['Órgão'].str.contains('Subprefeitura')]
