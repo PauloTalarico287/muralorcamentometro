@@ -47,7 +47,7 @@ try:
     gc = gspread.authorize(credentials)
     
     spreadsheet_key = os.getenv('GOOGLE_SHEETS_SPREADSHEET_KEY')
-      if not spreadsheet_key:
+    if not spreadsheet_key:
         raise Exception("GOOGLE_SHEETS_SPREADSHEET_KEY não definido")
     
     #SUBPREFEITURAS
