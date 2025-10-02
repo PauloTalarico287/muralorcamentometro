@@ -1,0 +1,3 @@
+name: Write credentials to file
+  run: |
+    echo "${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}" > service_account.json
