@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+  schedule:
+    # Executa todos os dias às 9h e às 21h (UTC)
+    # -> UTC-3 = 6h e 18h no horário de Brasília
+    - cron: "0 9 * * *"
+    - cron: "0 21 * * *"
 
 jobs:
   deploy:
