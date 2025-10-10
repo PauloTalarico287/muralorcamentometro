@@ -27,8 +27,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Rodar script DetalheGastos
+      - name: Rodar script DetalhesGastos
         env:
           GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
           GOOGLE_SHEETS_SPREADSHEET_KEY_DETALHES: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_KEY_DETALHES }}
-        run: python detalhegastos.py
+        run: python detalhesgastos.py
