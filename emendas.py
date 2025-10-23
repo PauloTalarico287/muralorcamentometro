@@ -67,7 +67,7 @@ PARTIDOS_VEREADORES = {
     "Adrilles Jorge": "União", "Amanda Vettorazzo": "União",
     "Pastora Sandra Alves": "União", "Ricardo Teixeira": "União",
     "Rubinho Nunes": "União", "Silvão Leite": "União",
-    "Silvinho": "União", "Silvinho Leite": "União",
+    "Silvinho": "União", "Silvinho Leite": "União", "Rodolfo Despachante": "União",
     
     # Podemos - 6 vereadores
     "Ana Carolina Oliveira": "Podemos", "Danilo do Posto": "Podemos",
@@ -195,20 +195,6 @@ detalhamento = detalhamento[cols]
 # ===============================
 # Tenta pegar das variáveis de ambiente (GitHub Actions)
 credentials_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
-
-if not credentials_json:
-    # Se não encontrar, tenta o Colab
-    try:
-        from google.colab import userdata
-        credentials_json = userdata.get('GOOGLE_SHEETS_CREDENTIALS')
-    except:
-        # Senão, carrega do arquivo local
-        try:
-            with open("insperautomacaopaulo-092d64d2b0f1.json", 'r') as f:
-                credentials_json = f.read()
-        except FileNotFoundError:
-            raise Exception("❌ Credenciais não encontradas. Configure GOOGLE_SHEETS_CREDENTIALS ou coloque o arquivo JSON no diretório.")
-
 credentials_info = json.loads(credentials_json)
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
