@@ -68,6 +68,7 @@ PARTIDOS_VEREADORES = {
     "Pastora Sandra Alves": "União", "Ricardo Teixeira": "União",
     "Rubinho Nunes": "União", "Silvão Leite": "União",
     "Silvinho": "União", "Silvinho Leite": "União",
+    "Rodolfo Despachante": "União",
 
     # Podemos - 6 vereadores
     "Ana Carolina Oliveira": "Podemos", "Danilo do Posto": "Podemos",
