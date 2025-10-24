@@ -42,7 +42,7 @@ if emendas.empty:
 print(f"📊 Total de registros de emendas: {len(emendas)}")
 
 # ===============================
-# 3️⃣ Dicionário de Partidos (Legislatura 2025-2028)
+# 3️⃣ Dicionário de Partidos - LISTA OFICIAL (Legislatura 2025-2028)
 # ===============================
 PARTIDOS_VEREADORES = {
     # PT - 8 vereadores
@@ -54,20 +54,19 @@ PARTIDOS_VEREADORES = {
     # MDB - 7 vereadores
     "Ely Teruel": "MDB", "Fabio Riva": "MDB", "Fábio Riva": "MDB",
     "George Hato": "MDB", "João Jorge": "MDB", "Marcelo Messias": "MDB",
-    "Paulo Frange": "MDB", "Sandra Santana": "MDB", "Sidney Cruz": "MDB", "Marlon Luz":"MDB",
+    "Paulo Frange": "MDB", "Sandra Santana": "MDB", "Sidney Cruz": "MDB",
     
     # PL - 7 vereadores
     "Dra Sandra Tadeu": "PL", "Dra. Sandra Tadeu": "PL",
     "Gilberto Nascimento": "PL", "Isac Félix": "PL", "Isac Felix": "PL",
     "Lucas Pavanato": "PL", "Rute Costa": "PL",
     "Sonaira Fernandes": "PL", "Zoe Martínez": "PL", "Zoe Martinez": "PL",
-    "Missionário José Olimpio": "PL",
     
     # União Brasil - 7 vereadores
     "Adrilles Jorge": "União", "Amanda Vettorazzo": "União",
     "Pastora Sandra Alves": "União", "Ricardo Teixeira": "União",
     "Rubinho Nunes": "União", "Silvão Leite": "União",
-    "Silvinho": "União", "Silvinho Leite": "União", "Rodolfo Despachante": "União",
+    "Silvinho": "União", "Silvinho Leite": "União",
     
     # Podemos - 6 vereadores
     "Ana Carolina Oliveira": "Podemos", "Danilo do Posto": "Podemos",
@@ -88,10 +87,10 @@ PARTIDOS_VEREADORES = {
     
     # PSD - 3 vereadores
     "Edir Sales": "PSD", "Rodrigo Goulart": "PSD",
-    "Thammy Miranda": "PSD", "Carlos Alberto Bezerra": "PSD",
+    "Thammy Miranda": "PSD",
     
     # Republicanos - 2 vereadores
-    "André Santos": "Republicanos", "Sansão Pereira": "Republicanos", "André Souza":"Republicanos",
+    "André Santos": "Republicanos", "Sansão Pereira": "Republicanos",
     
     # PSB - 2 vereadores
     "Eliseu Gabriel": "PSB", "Renata Falzoni": "PSB",
@@ -137,7 +136,7 @@ colunas_necessarias = {
 }
 
 # Verificar se todas as colunas existem (exceto Parlamentar e Partido que criamos)
-colunas_faltantes = [col for col in colunas_necessarias.keys()
+colunas_faltantes = [col for col in colunas_necessarias.keys() 
                      if col not in ['Parlamentar', 'Partido'] and col not in df.columns]
 if colunas_faltantes:
     print(f"⚠️ Colunas faltantes: {colunas_faltantes}")
@@ -170,10 +169,15 @@ ranking['Executado (%)'] = np.where(
 )
 
 ranking['Qtd Projetos'] = emendas_clean.groupby(['Parlamentar', 'Partido']).size().values
-ranking = ranking.sort_values('Liquidado', ascending=False)
+
+# Ordenar por % Executado (maior para menor)
+ranking = ranking.sort_values('Executado (%)', ascending=False)
+
+# Adiciona coluna de posição no ranking
+ranking.insert(0, 'Posição', range(1, len(ranking) + 1))
 
 # Reordenar colunas
-ranking = ranking[['Parlamentar', 'Partido', 'Qtd Projetos', 'Orçado', 'Liquidado', 'Executado (%)']]
+ranking = ranking[['Posição', 'Parlamentar', 'Partido', 'Qtd Projetos', 'Orçado', 'Liquidado', 'Executado (%)']]
 
 print(f"\n🏆 Top 5 Parlamentares:")
 print(ranking.head()[['Parlamentar', 'Partido', 'Liquidado', 'Executado (%)']].to_string(index=False))
@@ -195,14 +199,37 @@ detalhamento = detalhamento[cols]
 # ===============================
 # Tenta pegar das variáveis de ambiente (GitHub Actions)
 credentials_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
+
+if not credentials_json:
+    # Se não encontrar, tenta o Colab
+    try:
+        from google.colab import userdata
+        credentials_json = userdata.get('GOOGLE_SHEETS_CREDENTIALS')
+    except:
+        # Senão, carrega do arquivo local
+        try:
+            with open("insperautomacaopaulo-092d64d2b0f1.json", 'r') as f:
+                credentials_json = f.read()
+        except FileNotFoundError:
+            raise Exception("❌ Credenciais não encontradas. Configure GOOGLE_SHEETS_CREDENTIALS ou coloque o arquivo JSON no diretório.")
+
 credentials_info = json.loads(credentials_json)
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
 gc = gspread.authorize(credentials)
 
-# Usar a planilha especificada
-spreadsheet_key = "GOOGLE_SHEETS_SPREADSHEET_KEY_EMENDAS"
-planilha = gc.open_by_key(spreadsheet_key)
+# Usar a planilha especificada (pode vir de variável de ambiente)
+spreadsheet_key = os.environ.get("GOOGLE_SHEETS_SPREADSHEET_KEY_EMENDAS", "10hy_P2Wuqc-6W-Cl7tiiHS34fxOPMUV5HX457uaYgmo")
+print(f"📊 Conectando na planilha: {spreadsheet_key}")
+
+try:
+    planilha = gc.open_by_key(spreadsheet_key)
+    print(f"✅ Planilha encontrada: {planilha.title}")
+except gspread.exceptions.SpreadsheetNotFound:
+    raise Exception(f"❌ Planilha não encontrada! Verifique:\n"
+                   f"1. Se o ID está correto: {spreadsheet_key}\n"
+                   f"2. Se a conta de serviço tem acesso à planilha\n"
+                   f"   Email: {credentials_info.get('client_email')}")
 
 # ===============================
 # 8️⃣ Atualizar aba: Ranking_Emendas
