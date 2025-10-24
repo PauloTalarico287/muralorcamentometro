@@ -200,29 +200,15 @@ detalhamento = detalhamento[cols]
 # ===============================
 # Tenta pegar das variáveis de ambiente (GitHub Actions)
 credentials_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
-
-if not credentials_json:
-    # Se não encontrar, tenta o Colab
-    try:
-        from google.colab import userdata
-        credentials_json = userdata.get('GOOGLE_SHEETS_CREDENTIALS')
-    except:
-        # Senão, carrega do arquivo local
-        try:
-            with open("insperautomacaopaulo-092d64d2b0f1.json", 'r') as f:
-                credentials_json = f.read()
-        except FileNotFoundError:
-            raise Exception("❌ Credenciais não encontradas. Configure GOOGLE_SHEETS_CREDENTIALS ou coloque o arquivo JSON no diretório.")
-
 credentials_info = json.loads(credentials_json)
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 credentials = service_account.Credentials.from_service_account_info(credentials_info, scopes=scope)
 gc = gspread.authorize(credentials)
 
 # Usar a planilha especificada (pode vir de variável de ambiente)
-spreadsheet_key = os.environ.get("GOOGLE_SHEETS_SPREADSHEET_KEY_EMENDAS", "10hy_P2Wuqc-6W-Cl7tiiHS34fxOPMUV5HX457uaYgmo")
-print(f"📊 Conectando na planilha: {spreadsheet_key}")
-
+spreadsheet_key = os.environ.get("GOOGLE_SHEETS_SPREADSHEET_KEY_EMENDAS") or os.environ.get("GOOGLE_SHEETS_SPREADSHEET_KEY")
+if not spreadsheet_key:
+    raise Exception("❌ Nenhuma variável de planilha definida")
 try:
     planilha = gc.open_by_key(spreadsheet_key)
     print(f"✅ Planilha encontrada: {planilha.title}")
