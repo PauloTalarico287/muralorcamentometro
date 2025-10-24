@@ -50,57 +50,58 @@ PARTIDOS_VEREADORES = {
     "Hélio Rodrigues": "PT", "Jair Tatto": "PT", "João Ananias": "PT",
     "Luna Zarattini": "PT", "Luana Zarattini": "PT", "Nabil Bonduki": "PT",
     "Senival Moura": "PT",
-    
+
     # MDB - 7 vereadores
     "Ely Teruel": "MDB", "Fabio Riva": "MDB", "Fábio Riva": "MDB",
     "George Hato": "MDB", "João Jorge": "MDB", "Marcelo Messias": "MDB",
-    "Paulo Frange": "MDB", "Sandra Santana": "MDB", "Sidney Cruz": "MDB",
-    
+    "Paulo Frange": "MDB", "Sandra Santana": "MDB", "Sidney Cruz": "MDB", "Marlon Luz":"MDB",
+
     # PL - 7 vereadores
     "Dra Sandra Tadeu": "PL", "Dra. Sandra Tadeu": "PL",
     "Gilberto Nascimento": "PL", "Isac Félix": "PL", "Isac Felix": "PL",
     "Lucas Pavanato": "PL", "Rute Costa": "PL",
     "Sonaira Fernandes": "PL", "Zoe Martínez": "PL", "Zoe Martinez": "PL",
-    
+    "Missionário José Olimpio": "PL",
+
     # União Brasil - 7 vereadores
     "Adrilles Jorge": "União", "Amanda Vettorazzo": "União",
     "Pastora Sandra Alves": "União", "Ricardo Teixeira": "União",
     "Rubinho Nunes": "União", "Silvão Leite": "União",
     "Silvinho": "União", "Silvinho Leite": "União",
-    
+
     # Podemos - 6 vereadores
     "Ana Carolina Oliveira": "Podemos", "Danilo do Posto": "Podemos",
     "Danilo do Posto de Saúde": "Podemos", "Dr. Milton Ferreira": "Podemos",
     "Gabriel Abreu": "Podemos", "Kenji Ito": "Podemos",
     "Kenji Palumbo": "Podemos", "Simone Ganem": "Podemos",
-    
+
     # PSOL - 6 vereadores
     "Amanda Paschoal": "PSOL", "Celso Giannazi": "PSOL",
     "Keit Lima": "PSOL", "Luana Alves": "PSOL",
     "Professor Toninho Vespoli": "PSOL", "Toninho Vespoli": "PSOL",
     "Silvia da Bancada Feminista": "PSOL", "Silvia Ferraro": "PSOL",
-    
+
     # PP - 4 vereadores
     "Dr. Murillo Lima": "PP", "Janaina Paschoal": "PP",
     "Major Palumbo": "PP", "Bombeiro Major Palumbo": "PP",
     "Sargento Nantes": "PP",
-    
+
     # PSD - 3 vereadores
     "Edir Sales": "PSD", "Rodrigo Goulart": "PSD",
-    "Thammy Miranda": "PSD",
-    
+    "Thammy Miranda": "PSD", "Carlos Alberto Bezerra": "PSD",
+
     # Republicanos - 2 vereadores
-    "André Santos": "Republicanos", "Sansão Pereira": "Republicanos",
-    
+    "André Santos": "Republicanos", "Sansão Pereira": "Republicanos", "André Souza":"Republicanos",
+
     # PSB - 2 vereadores
     "Eliseu Gabriel": "PSB", "Renata Falzoni": "PSB",
-    
+
     # Novo - 1 vereador
     "Cris Monteiro": "Novo",
-    
+
     # Rede - 1 vereador
     "Marina Bragante": "Rede",
-    
+
     # PV - 1 vereador
     "Roberto Tripoli": "PV", "Tripoli": "PV",
 }
