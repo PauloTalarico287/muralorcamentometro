@@ -11,32 +11,53 @@ import io
 # ===============================
 # 1️⃣ Baixar o Excel mais recente
 # ===============================
-ano_completo = datetime.now().strftime("%Y")
-ano_curto = datetime.now().strftime("%y")
-mes = datetime.now().strftime("%m")
+
+ano_completo = datetime.now().strftime("%Y")  # ex: 2025
+ano_curto = datetime.now().strftime("%y")     # ex: 25
+mes = datetime.now().strftime("%m")           # ex: 11
 
 url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
-print(f"🔗 Baixando: {url}")
+print(f"🔗 Tentando baixar: {url}")
 
-if response.status_code == 404:
+# 1ª tentativa — mês atual
+try:
+    response = requests.get(url, timeout=30)
+except Exception as e:
+    print(f"⚠️ Erro ao tentar baixar o arquivo: {e}")
+    response = None
+
+# 2ª tentativa — mês anterior se der 404
+if not response or response.status_code == 404:
     print("⚠️ Arquivo do mês atual não encontrado. Tentando mês anterior...")
+
     mes_anterior = int(mes) - 1
-    ano_anterior = ano_completo
+    ano_anterior = int(ano_completo)
 
     if mes_anterior == 0:
         mes_anterior = 12
-        ano_anterior = str(int(ano_completo) - 1)
+        ano_anterior -= 1
 
     url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_anterior}/basedadosexecucao_{mes_anterior:02d}{str(ano_anterior)[2:]}.xlsx"
     print(f"🔗 Tentando baixar: {url}")
-    response = requests.get(url, timeout=30)
 
-# Se ainda assim der erro, encerrar sem quebrar Action
-if response.status_code != 200:
-    print(f"❌ Não foi possível baixar arquivo. HTTP {response.status_code}. Encerrando sem erro no Actions.")
+    try:
+        response = requests.get(url, timeout=30)
+    except Exception as e:
+        print(f"⚠️ Erro ao tentar baixar o arquivo do mês anterior: {e}")
+        response = None
+
+# Se ainda assim não conseguiu, encerra SEM quebrar o GitHub Actions
+if not response or response.status_code != 200:
+    print(f"❌ Não foi possível baixar nenhum arquivo. Encerrando sem erro no Actions.")
     exit(0)
 
+# Salvar arquivo
+excel_file = "base_orcamento.xlsx"
+with open(excel_file, "wb") as f:
+    f.write(response.content)
+
 print("✅ Arquivo baixado com sucesso!")
+
 df = pd.read_excel(io.BytesIO(response.content))
 print("✅ Arquivo baixado e lido com sucesso!")
 
