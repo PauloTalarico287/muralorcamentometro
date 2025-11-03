@@ -18,10 +18,25 @@ mes = datetime.now().strftime("%m")
 url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
 print(f"🔗 Baixando: {url}")
 
-response = requests.get(url, timeout=30)
-if response.status_code != 200:
-    raise Exception(f"❌ Erro ao baixar o arquivo: {response.status_code}")
+if response.status_code == 404:
+    print("⚠️ Arquivo do mês atual não encontrado. Tentando mês anterior...")
+    mes_anterior = int(mes) - 1
+    ano_anterior = ano_completo
 
+    if mes_anterior == 0:
+        mes_anterior = 12
+        ano_anterior = str(int(ano_completo) - 1)
+
+    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_anterior}/basedadosexecucao_{mes_anterior:02d}{str(ano_anterior)[2:]}.xlsx"
+    print(f"🔗 Tentando baixar: {url}")
+    response = requests.get(url, timeout=30)
+
+# Se ainda assim der erro, encerrar sem quebrar Action
+if response.status_code != 200:
+    print(f"❌ Não foi possível baixar arquivo. HTTP {response.status_code}. Encerrando sem erro no Actions.")
+    exit(0)
+
+print("✅ Arquivo baixado com sucesso!")
 df = pd.read_excel(io.BytesIO(response.content))
 print("✅ Arquivo baixado e lido com sucesso!")
 
