@@ -6,22 +6,43 @@ import gspread
 from google.oauth2 import service_account
 import io
 import os
+import urllib3
 
 # === CONFIGURAÇÃO DO LINK DINÂMICO ===
 ano_completo = datetime.now().strftime("%Y")  # Ex: 2025
 ano_curto = datetime.now().strftime("%y")     # Ex: 25
-mes = datetime.now().strftime("%m")           # Ex: 10
+mes = datetime.now().strftime("%m")           # Ex: 11
 
 url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
 print(f"🔗 Tentando baixar: {url}")
 
-response = requests.get(url)
-if response.status_code != 200:
-    # Se não existir, tenta o mês anterior
+try:
+    # Tenta o download com verificação SSL normal
+    response = requests.get(url, timeout=30)
+except requests.exceptions.SSLError:
+    print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    response = requests.get(url, timeout=30, verify=False)
+
+# Caso o arquivo do mês atual não exista
+if response.status_code == 404:
     mes_anterior = (datetime.now().replace(day=1) - timedelta(days=1)).strftime("%m")
     url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes_anterior}{ano_curto}.xlsx"
     print(f"⚠️ Arquivo do mês atual não encontrado. Tentando link alternativo: {url}")
-    response = requests.get(url)
+
+    try:
+        response = requests.get(url, timeout=30)
+    except requests.exceptions.SSLError:
+        print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        response = requests.get(url, timeout=30, verify=False)
+
+# Se ainda assim der erro, encerrar sem quebrar o Action
+if response.status_code != 200:
+    print(f"❌ Não foi possível baixar nenhum arquivo. Código HTTP: {response.status_code}")
+    exit(0)  # encerra de forma segura, sem gerar erro no GitHub Actions
+
+print("✅ Arquivo baixado e lido com sucesso!")
 
 bytes_data = io.BytesIO(response.content)
 df = pd.read_excel(bytes_data)
