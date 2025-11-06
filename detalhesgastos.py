@@ -6,26 +6,46 @@ import pandas as pd
 import requests
 import gspread
 from google.oauth2 import service_account
+import urllib3
 
-# ===============================
-# 1️⃣ Baixar o Excel mais recente
-# ===============================
 ano_completo = datetime.now().strftime("%Y")
 ano_curto = datetime.now().strftime("%y")
 mes = datetime.now().strftime("%m")
 
 url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
+print(f"🔗 Tentando baixar: {url}")
 
-response = requests.get(url)
+try:
+    response = requests.get(url, timeout=30)
+except requests.exceptions.SSLError:
+    print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    response = requests.get(url, timeout=30, verify=False)
+
+# Se o arquivo do mês atual não existir (erro 404)
+if response.status_code == 404:
+    mes_anterior = (datetime.now().replace(day=1) - timedelta(days=1)).strftime("%m")
+    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes_anterior}{ano_curto}.xlsx"
+    print(f"⚠️ Arquivo do mês atual não encontrado. Tentando link alternativo: {url}")
+
+    try:
+        response = requests.get(url, timeout=30)
+    except requests.exceptions.SSLError:
+        print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        response = requests.get(url, timeout=30, verify=False)
+
+# Se ainda assim não conseguir baixar
 if response.status_code != 200:
-    raise Exception(f"Erro ao baixar o arquivo: {response.status_code}")
+    print(f"❌ Não foi possível baixar nenhum arquivo. Código HTTP: {response.status_code}")
+    exit(0)
 
+# Salvar o arquivo baixado
 excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
 with open(excel_file, "wb") as f:
     f.write(response.content)
 
-print("✅ Arquivo baixado com sucesso!")
-
+print("✅ Arquivo baixado e salvo com sucesso!")
 # ===============================
 # 2️⃣ Ler e preparar dados
 # ===============================
