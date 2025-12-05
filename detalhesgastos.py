@@ -72,6 +72,28 @@ df.columns = [
 # Substitui valores ausentes e zeros
 df = df.replace([np.nan, np.inf, -np.inf], 0)
 
+# Substitui valores ausentes e zeros
+df = df.replace([np.nan, np.inf, -np.inf], 0)
+
+# ✅ AGRUPAR E SOMAR por Órgão, Projeto/Atividade, Programa e Despesa
+df = df.groupby(
+    ["Órgão", "Projeto/Atividade", "Programa", "Despesa"], 
+    as_index=False
+).agg({
+    "Previsto 2025": "sum",
+    "Orçado Atualizado": "sum",
+    "Congelado": "sum",
+    "Descongelado": "sum",
+    "Realizado": "sum"
+})
+
+# Calcula percentual executado
+df["Executado (%)"] = np.where(
+    df["Previsto 2025"] > 0,
+    (df["Realizado"] / df["Previsto 2025"]) * 100,
+    0
+)
+
 # Calcula percentual executado
 df["Executado (%)"] = np.where(
     df["Previsto 2025"] > 0,
