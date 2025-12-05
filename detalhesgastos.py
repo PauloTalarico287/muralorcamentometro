@@ -49,11 +49,14 @@ print("✅ Arquivo baixado e salvo com sucesso!")
 # ===============================
 # 2️⃣ Ler e preparar dados
 # ===============================
+# ===============================
+# 2️⃣ Ler e preparar dados
+# ===============================
 df = pd.read_excel(excel_file)
 
 # Seleciona colunas relevantes
 colunas = [
-    'Ds_Orgao', 'Ds_Projeto_Atividade', 'Ds_Programa',
+    'Ds_Orgao', 'Ds_Projeto_Atividade', 'Ds_Programa', 'Ds_Despesa',  # ✅ ADICIONADA
     'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado',
     'Vl_Congelado', 'Vl_Descongelado', 'Vl_Liquidado'
 ]
@@ -61,7 +64,7 @@ df = df[colunas].copy()
 
 # Renomear colunas
 df.columns = [
-    "Órgão", "Projeto/Atividade", "Programa",
+    "Órgão", "Projeto/Atividade", "Programa", "Despesa",  # ✅ ADICIONADA
     "Previsto 2025", "Orçado Atualizado",
     "Congelado", "Descongelado", "Realizado"
 ]
