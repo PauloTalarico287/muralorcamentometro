@@ -8,7 +8,7 @@ import gspread
 from google.oauth2 import service_account
 import urllib3
 
-pythonfrom datetime import datetime, timedelta
+from datetime import datetime, timedelta
 
 # ✅ SEMPRE BUSCAR O DADO MAIS RECENTE DE 2025
 ano_completo = "2025"
