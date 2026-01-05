@@ -12,8 +12,6 @@ import io
 # 1️⃣ Baixar o Excel mais recente
 # ===============================
 
-pythonfrom datetime import datetime, timedelta
-
 # ✅ SEMPRE BUSCAR O DADO MAIS RECENTE DE 2025
 ano_completo = "2025"
 ano_curto = "25"
