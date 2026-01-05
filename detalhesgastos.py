@@ -8,36 +8,47 @@ import gspread
 from google.oauth2 import service_account
 import urllib3
 
-ano_completo = datetime.now().strftime("%Y")
-ano_curto = datetime.now().strftime("%y")
-mes = datetime.now().strftime("%m")
+pythonfrom datetime import datetime, timedelta
 
-url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
-print(f"🔗 Tentando baixar: {url}")
+# ✅ SEMPRE BUSCAR O DADO MAIS RECENTE DE 2025
+ano_completo = "2025"
+ano_curto = "25"
 
-try:
-    response = requests.get(url, timeout=30)
-except requests.exceptions.SSLError:
-    print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response = requests.get(url, timeout=30, verify=False)
+# Começar tentando o mês atual
+mes_tentativa = datetime.now().month
 
-# Se o arquivo do mês atual não existir (erro 404)
-if response.status_code == 404:
-    mes_anterior = (datetime.now().replace(day=1) - timedelta(days=1)).strftime("%m")
-    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes_anterior}{ano_curto}.xlsx"
-    print(f"⚠️ Arquivo do mês atual não encontrado. Tentando link alternativo: {url}")
+# Se já estamos em 2026, começar por dezembro/2025
+if datetime.now().year > 2025:
+    mes_tentativa = 12
 
+url = None
+response = None
+
+# Tentar meses de trás para frente até encontrar um arquivo disponível
+while mes_tentativa >= 1:
+    mes = str(mes_tentativa).zfill(2)  # Formata com zero à esquerda (01, 02, etc)
+    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
+    print(f"🔗 Tentando baixar: {url}")
+    
     try:
         response = requests.get(url, timeout=30)
+        if response.status_code == 200:
+            print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+            break
     except requests.exceptions.SSLError:
         print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         response = requests.get(url, timeout=30, verify=False)
+        if response.status_code == 200:
+            print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+            break
+    
+    print(f"⚠️ Arquivo de {mes}/{ano_completo} não encontrado. Tentando mês anterior...")
+    mes_tentativa -= 1
 
-# Se ainda assim não conseguir baixar
-if response.status_code != 200:
-    print(f"❌ Não foi possível baixar nenhum arquivo. Código HTTP: {response.status_code}")
+# Se não encontrou nenhum arquivo de 2025
+if not response or response.status_code != 200:
+    print(f"❌ Nenhum arquivo de 2025 encontrado. Código HTTP: {response.status_code if response else 'N/A'}")
     exit(0)
 
 # Salvar o arquivo baixado
@@ -45,7 +56,8 @@ excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
 with open(excel_file, "wb") as f:
     f.write(response.content)
 
-print("✅ Arquivo baixado e salvo com sucesso!")
+print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
+
 # ===============================
 # 2️⃣ Ler e preparar dados
 # ===============================
