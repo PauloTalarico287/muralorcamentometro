@@ -12,54 +12,55 @@ import io
 # 1️⃣ Baixar o Excel mais recente
 # ===============================
 
-ano_completo = datetime.now().strftime("%Y")  # ex: 2025
-ano_curto = datetime.now().strftime("%y")     # ex: 25
-mes = datetime.now().strftime("%m")           # ex: 11
+pythonfrom datetime import datetime, timedelta
 
-url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
-print(f"🔗 Tentando baixar: {url}")
+# ✅ SEMPRE BUSCAR O DADO MAIS RECENTE DE 2025
+ano_completo = "2025"
+ano_curto = "25"
 
-# 1ª tentativa — mês atual
-try:
-    response = requests.get(url, timeout=30)
-except Exception as e:
-    print(f"⚠️ Erro ao tentar baixar o arquivo: {e}")
-    response = None
+# Começar tentando o mês atual
+mes_tentativa = datetime.now().month
 
-# 2ª tentativa — mês anterior se der 404
-if not response or response.status_code == 404:
-    print("⚠️ Arquivo do mês atual não encontrado. Tentando mês anterior...")
+# Se já estamos em 2026, começar por dezembro/2025
+if datetime.now().year > 2025:
+    mes_tentativa = 12
 
-    mes_anterior = int(mes) - 1
-    ano_anterior = int(ano_completo)
+url = None
+response = None
 
-    if mes_anterior == 0:
-        mes_anterior = 12
-        ano_anterior -= 1
-
-    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_anterior}/basedadosexecucao_{mes_anterior:02d}{str(ano_anterior)[2:]}.xlsx"
+# Tentar meses de trás para frente até encontrar um arquivo disponível
+while mes_tentativa >= 1:
+    mes = str(mes_tentativa).zfill(2)  # Formata com zero à esquerda (01, 02, etc)
+    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
     print(f"🔗 Tentando baixar: {url}")
-
+    
     try:
         response = requests.get(url, timeout=30)
-    except Exception as e:
-        print(f"⚠️ Erro ao tentar baixar o arquivo do mês anterior: {e}")
-        response = None
+        if response.status_code == 200:
+            print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+            break
+    except requests.exceptions.SSLError:
+        print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        response = requests.get(url, timeout=30, verify=False)
+        if response.status_code == 200:
+            print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+            break
+    
+    print(f"⚠️ Arquivo de {mes}/{ano_completo} não encontrado. Tentando mês anterior...")
+    mes_tentativa -= 1
 
-# Se ainda assim não conseguiu, encerra SEM quebrar o GitHub Actions
+# Se não encontrou nenhum arquivo de 2025
 if not response or response.status_code != 200:
-    print(f"❌ Não foi possível baixar nenhum arquivo. Encerrando sem erro no Actions.")
+    print(f"❌ Nenhum arquivo de 2025 encontrado. Código HTTP: {response.status_code if response else 'N/A'}")
     exit(0)
 
-# Salvar arquivo
-excel_file = "base_orcamento.xlsx"
+# Salvar o arquivo baixado
+excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
 with open(excel_file, "wb") as f:
     f.write(response.content)
 
-print("✅ Arquivo baixado com sucesso!")
-
-df = pd.read_excel(io.BytesIO(response.content))
-print("✅ Arquivo baixado e lido com sucesso!")
+print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
 
 # ===============================
 # 2️⃣ Filtrar apenas Emendas Parlamentares
