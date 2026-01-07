@@ -61,6 +61,13 @@ with open(excel_file, "wb") as f:
 print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
 
 # ===============================
+# CORREÇÃO: Carregar o arquivo Excel ANTES de verificar colunas
+# ===============================
+print(f"📖 Carregando arquivo Excel...")
+df = pd.read_excel(excel_file)
+print(f"✅ Arquivo carregado! Total de linhas: {len(df)}")
+
+# ===============================
 # 2️⃣ Filtrar apenas Emendas Parlamentares
 # ===============================
 # Verificar se coluna existe
