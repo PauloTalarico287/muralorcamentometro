@@ -1,10 +1,9 @@
-# muralorcamentometro
-Análise de dados da execução orçamentária da prefeitura de SP
-Orçamentômetro
+# Orcamentometro
+Extração e análise de dados da execução orçamentária da prefeitura de SP
 
-O Orçamentômetro é um projeto de jornalismo de dados que monitora a execução orçamentária da Prefeitura de São Paulo, com foco em transparência, desigualdades territoriais e acesso à informação para moradores das periferias da cidade. Os dados são utilizados para uma página na Agência Mural (agenciamural.org.br). 
+O Orçamentômetro é um projeto de jornalismo de dados, criado pela Agência Mural de Jornalismo das Periferias, que monitora a execução orçamentária da Prefeitura de São Paulo, com foco em transparência, desigualdades territoriais e acesso à informação para moradores das periferias da cidade. Os dados são utilizados para uma página na Agência Mural (https://orcamentometro.agenciamural.org.br/)). 
 
-O projeto transforma dados públicos complexos em visualizações acessíveis, permitindo acompanhar quanto do orçamento municipal foi prometido, empenhado e efetivamente executado ao longo do ano.
+O projeto transforma dados públicos complexos em visualizações acessíveis, permitindo acompanhar quanto do orçamento municipal foi prometido e efetivamente executado ao longo do ano.
 
 🎯 Objetivos
 
@@ -22,6 +21,7 @@ Execução orçamentária por:
 Secretarias municipais
 Subprefeituras
 Fundos municipais
+Emendas parlamentares
 
 Evolução dos gastos ao longo do tempo
 
@@ -45,27 +45,9 @@ Apoiar investigações sobre gastos públicos
 Visualizar desigualdades no investimento público
 Fortalecer o debate público e o controle social
 
-🤝 Contribuições
-
-Contribuições são bem-vindas!
-
-Sugestões de melhorias
-Correções de código
-Novas visualizações ou indicadores
-Documentação
-
-Sinta-se à vontade para abrir uma issue ou pull request.
-
-📄 Licença
-
-Este projeto está sob a licença MIT (ou outra, se preferir).
-Consulte o arquivo LICENSE para mais informações.
 
 ✉️ Contato
 
 Projeto desenvolvido por Paulo Talarico
 📌 Agência Mural | Jornalismo de dados | Periferias
 📧 paulo@agenciamural.org.br
-ajustar para submissões (Pulitzer, fundações, grants)
-
-personalizar para o perfil da Agência Mural
