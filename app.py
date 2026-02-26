@@ -199,9 +199,9 @@ for ano_atual in [2025, 2026]:
     total_por_coluna = investimento.sum()
     guia_geral = get_or_create_worksheet(planilha, f"Geral{sufixo}")
     guia_geral.update('A2', 'Total')
-    guia_geral.update('B2', total_por_coluna[f'Valor previsto para {ano_completo}'])
-    guia_geral.update('C2', total_por_coluna['Realizado'])
-    guia_geral.update('D2', (total_por_coluna['Realizado'] / total_por_coluna[f'Valor previsto para {ano_completo}']) * 100)
+    guia_geral.update('B2', float(total_por_coluna[f'Valor previsto para {ano_completo}']))
+    guia_geral.update('C2', float(total_por_coluna['Realizado']))
+    guia_geral.update('D2', float((total_por_coluna['Realizado'] / total_por_coluna[f'Valor previsto para {ano_completo}']) * 100))
     print(f"✅ Aba 'Geral{sufixo}' atualizada!")
 
 print(f"\n🎉 Todos os anos processados com sucesso!")
