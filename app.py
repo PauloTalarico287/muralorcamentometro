@@ -168,7 +168,7 @@ for ano_atual in [2025, 2026]:
     investimento_por_sub.sort_values('Executado (%)', ascending=False, inplace=True)
 
     guia_sub = get_or_create_worksheet(planilha, f"Subprefeituras{sufixo}")
-    data_sub = [investimento_por_sub.columns.tolist()] + investimento_por_sub.values.tolist()
+    data_sub = [investimento_por_sub.columns.tolist()] + investimento_por_sub.astype(object).values.tolist()
     guia_sub.clear()
     guia_sub.update(data_sub, 2)
     print(f"✅ Aba 'Subprefeituras{sufixo}' atualizada!")
@@ -179,7 +179,7 @@ for ano_atual in [2025, 2026]:
     investimento_por_sec.sort_values('Executado (%)', ascending=False, inplace=True)
 
     guia_sec = get_or_create_worksheet(planilha, f"Secretarias{sufixo}")
-    data_sec = [investimento_por_sec.columns.tolist()] + investimento_por_sec.values.tolist()
+    data_sec = [investimento_por_sec.columns.tolist()] + investimento_por_sec.astype(object).values.tolist()
     guia_sec.clear()
     guia_sec.update(data_sec, 2)
     print(f"✅ Aba 'Secretarias{sufixo}' atualizada!")
@@ -190,7 +190,7 @@ for ano_atual in [2025, 2026]:
     investimento_por_outros.sort_values('Executado (%)', ascending=False, inplace=True)
 
     guia_outros = get_or_create_worksheet(planilha, f"Outros{sufixo}")
-    data_outros = [investimento_por_outros.columns.tolist()] + investimento_por_outros.values.tolist()
+    data_outros = [investimento_por_outros.columns.tolist()] + investimento_por_outros.astype(object).values.tolist()
     guia_outros.clear()
     guia_outros.update(data_outros, 2)
     print(f"✅ Aba 'Outros{sufixo}' atualizada!")
