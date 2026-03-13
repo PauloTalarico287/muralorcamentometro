@@ -8,125 +8,8 @@ import gspread
 from google.oauth2 import service_account
 import urllib3
 
-from datetime import datetime, timedelta
-
-# ✅ SEMPRE BUSCAR O DADO MAIS RECENTE DE 2025
-ano_completo = "2025"
-ano_curto = "25"
-
-# Começar tentando o mês atual
-mes_tentativa = datetime.now().month
-
-# Se já estamos em 2026, começar por dezembro/2025
-if datetime.now().year > 2025:
-    mes_tentativa = 12
-
-url = None
-response = None
-
-# Tentar meses de trás para frente até encontrar um arquivo disponível
-while mes_tentativa >= 1:
-    mes = str(mes_tentativa).zfill(2)  # Formata com zero à esquerda (01, 02, etc)
-    url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
-    print(f"🔗 Tentando baixar: {url}")
-    
-    try:
-        response = requests.get(url, timeout=30)
-        if response.status_code == 200:
-            print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
-            break
-    except requests.exceptions.SSLError:
-        print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        response = requests.get(url, timeout=30, verify=False)
-        if response.status_code == 200:
-            print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
-            break
-    
-    print(f"⚠️ Arquivo de {mes}/{ano_completo} não encontrado. Tentando mês anterior...")
-    mes_tentativa -= 1
-
-# Se não encontrou nenhum arquivo de 2025
-if not response or response.status_code != 200:
-    print(f"❌ Nenhum arquivo de 2025 encontrado. Código HTTP: {response.status_code if response else 'N/A'}")
-    exit(0)
-
-# Salvar o arquivo baixado
-excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
-with open(excel_file, "wb") as f:
-    f.write(response.content)
-
-print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
-
 # ===============================
-# 2️⃣ Ler e preparar dados
-# ===============================
-# ===============================
-# 2️⃣ Ler e preparar dados
-# ===============================
-df = pd.read_excel(excel_file)
-
-# Seleciona colunas relevantes
-colunas = [
-    'Ds_Orgao', 'Ds_Projeto_Atividade', 'Ds_Programa', 'Ds_Despesa',  # ✅ ADICIONADA
-    'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado',
-    'Vl_Congelado', 'Vl_Descongelado', 'Vl_Liquidado'
-]
-df = df[colunas].copy()
-
-# Renomear colunas
-df.columns = [
-    "Órgão", "Projeto/Atividade", "Programa", "Despesa",  # ✅ ADICIONADA
-    "Previsto 2025", "Orçado Atualizado",
-    "Congelado", "Descongelado", "Realizado"
-]
-
-# Substitui valores ausentes e zeros
-df = df.replace([np.nan, np.inf, -np.inf], 0)
-
-# Substitui valores ausentes e zeros
-df = df.replace([np.nan, np.inf, -np.inf], 0)
-
-# ✅ AGRUPAR E SOMAR por Órgão, Projeto/Atividade, Programa e Despesa
-df = df.groupby(
-    ["Órgão", "Projeto/Atividade", "Programa", "Despesa"], 
-    as_index=False
-).agg({
-    "Previsto 2025": "sum",
-    "Orçado Atualizado": "sum",
-    "Congelado": "sum",
-    "Descongelado": "sum",
-    "Realizado": "sum"
-})
-
-# Calcula percentual executado
-df["Executado (%)"] = np.where(
-    df["Previsto 2025"] > 0,
-    (df["Realizado"] / df["Previsto 2025"]) * 100,
-    0
-)
-
-# Calcula percentual executado
-df["Executado (%)"] = np.where(
-    df["Previsto 2025"] > 0,
-    (df["Realizado"] / df["Previsto 2025"]) * 100,
-    0
-)
-
-# ===============================
-# 3️⃣ Separar Subprefeituras e Outros Órgãos
-# ===============================
-subprefeituras = df[df["Órgão"].str.contains("Subprefeitura", case=False, na=False)].copy()
-outros_orgaos = df[~df["Órgão"].str.contains("Subprefeitura", case=False, na=False)].copy()
-
-subprefeituras = subprefeituras.sort_values(["Órgão", "Projeto/Atividade"])
-outros_orgaos = outros_orgaos.sort_values(["Órgão", "Projeto/Atividade"])
-
-print(f"🔹 Subprefeituras encontradas: {subprefeituras['Órgão'].nunique()}")
-print(f"🔹 Outros órgãos encontrados: {outros_orgaos['Órgão'].nunique()}")
-
-# ===============================
-# 4️⃣ Autenticar Google Sheets
+# 1️⃣ Autenticar Google Sheets
 # ===============================
 credentials_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
 credentials_info = json.loads(credentials_json)
@@ -140,73 +23,163 @@ if not spreadsheet_key:
 
 planilha = gc.open_by_key(spreadsheet_key)
 
-# ===============================
-# 5️⃣ Atualizar aba: Detalhes_Subprefeituras
-# ===============================
-try:
-    guia_sub = planilha.worksheet("Detalhes_Subprefeituras")
-except gspread.exceptions.WorksheetNotFound:
-    guia_sub = planilha.add_worksheet(title="Detalhes_Subprefeituras", rows=5000, cols=20)
+# === FUNÇÃO AUXILIAR: obter ou criar aba ===
+def get_or_create_worksheet(planilha, nome_aba, rows=5000):
+    try:
+        return planilha.worksheet(nome_aba)
+    except gspread.exceptions.WorksheetNotFound:
+        print(f"➕ Aba '{nome_aba}' não encontrada. Criando...")
+        return planilha.add_worksheet(title=nome_aba, rows=rows, cols=20)
 
-guia_sub.clear()
+# === LOOP PELOS ANOS ===
+for ano_atual in [2025, 2026]:
+    ano_completo = str(ano_atual)
+    ano_curto = str(ano_atual)[-2:]
 
-# Formatar valores numéricos
-subprefeituras_formatted = subprefeituras.copy()
-for col in ["Previsto 2025", "Orçado Atualizado", "Congelado", "Descongelado", "Realizado"]:
-    subprefeituras_formatted[col] = subprefeituras_formatted[col].map(lambda x: f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    print(f"\n{'='*50}")
+    print(f"📅 Processando dados de {ano_completo}...")
+    print(f"{'='*50}")
 
-data_to_append_sub = [subprefeituras_formatted.columns.tolist()] + subprefeituras_formatted.values.tolist()
-guia_sub.update(data_to_append_sub)
-print("✅ Aba 'Detalhes_Subprefeituras' atualizada com sucesso!")
+    # Para anos passados começa em dezembro, para o atual começa no mês corrente
+    if ano_atual < datetime.now().year:
+        mes_tentativa = 12
+    else:
+        mes_tentativa = datetime.now().month
 
-# ===============================
-# 6️⃣ Atualizar aba: Detalhes_Outros_Orgaos
-# ===============================
-try:
-    guia_outros = planilha.worksheet("Detalhes_Outros_Orgaos")
-except gspread.exceptions.WorksheetNotFound:
-    guia_outros = planilha.add_worksheet(title="Detalhes_Outros_Orgaos", rows=5000, cols=20)
+    response = None
 
-guia_outros.clear()
+    # Tentar meses de trás para frente até encontrar um arquivo disponível
+    while mes_tentativa >= 1:
+        mes = str(mes_tentativa).zfill(2)
+        url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
+        print(f"🔗 Tentando baixar: {url}")
 
-outros_orgaos_formatted = outros_orgaos.copy()
-for col in ["Previsto 2025", "Orçado Atualizado", "Congelado", "Descongelado", "Realizado"]:
-    outros_orgaos_formatted[col] = outros_orgaos_formatted[col].map(lambda x: f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        try:
+            response = requests.get(url, timeout=30)
+            if response.status_code == 200:
+                print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+                break
+        except requests.exceptions.SSLError:
+            print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            response = requests.get(url, timeout=30, verify=False)
+            if response.status_code == 200:
+                print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+                break
 
-data_to_append_outros = [outros_orgaos_formatted.columns.tolist()] + outros_orgaos_formatted.values.tolist()
-guia_outros.update(data_to_append_outros)
-print("✅ Aba 'Detalhes_Outros_Orgaos' atualizada com sucesso!")
+        print(f"⚠️ Arquivo de {mes}/{ano_completo} não encontrado. Tentando mês anterior...")
+        mes_tentativa -= 1
 
-# ===============================
-# 7️⃣ Atualizar aba: Resumo por Programa (opcional)
-# ===============================
-programas = df.groupby(["Órgão", "Programa"], as_index=False).agg({
-    "Previsto 2025": "sum",
-    "Orçado Atualizado": "sum",
-    "Congelado": "sum",
-    "Descongelado": "sum",
-    "Realizado": "sum"
-})
-programas["Executado (%)"] = np.where(
-    programas["Previsto 2025"] > 0,
-    (programas["Realizado"] / programas["Previsto 2025"]) * 100,
-    0
-)
-programas = programas.replace([np.nan, np.inf, -np.inf], 0)
+    if not response or response.status_code != 200:
+        print(f"❌ Nenhum arquivo de {ano_completo} encontrado. Pulando para o próximo ano...")
+        continue
 
-try:
-    guia_prog = planilha.worksheet("Resumo_Programas")
-except gspread.exceptions.WorksheetNotFound:
-    guia_prog = planilha.add_worksheet(title="Resumo_Programas", rows=5000, cols=20)
+    # Salvar e processar o arquivo
+    excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
+    with open(excel_file, "wb") as f:
+        f.write(response.content)
+    print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
 
-guia_prog.clear()
+    # ===============================
+    # 2️⃣ Ler e preparar dados
+    # ===============================
+    df = pd.read_excel(excel_file)
 
-programas_formatted = programas.copy()
-for col in ["Previsto 2025", "Orçado Atualizado", "Congelado", "Descongelado", "Realizado"]:
-    programas_formatted[col] = programas_formatted[col].map(lambda x: f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    col_previsto = f"Previsto {ano_completo}"
 
-data_to_append_prog = [programas_formatted.columns.tolist()] + programas_formatted.values.tolist()
-guia_prog.update(data_to_append_prog)
-print("✅ Aba 'Resumo_Programas' atualizada com sucesso!")
+    colunas = [
+        'Ds_Orgao', 'Ds_Projeto_Atividade', 'Ds_Programa', 'Ds_Despesa',
+        'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado',
+        'Vl_Congelado', 'Vl_Descongelado', 'Vl_Liquidado'
+    ]
+    df = df[colunas].copy()
 
-print("🎯 Processo concluído sem erros.")
+    df.columns = [
+        "Órgão", "Projeto/Atividade", "Programa", "Despesa",
+        col_previsto, "Orçado Atualizado",
+        "Congelado", "Descongelado", "Realizado"
+    ]
+
+    df = df.replace([np.nan, np.inf, -np.inf], 0)
+
+    df = df.groupby(
+        ["Órgão", "Projeto/Atividade", "Programa", "Despesa"],
+        as_index=False
+    ).agg({
+        col_previsto: "sum",
+        "Orçado Atualizado": "sum",
+        "Congelado": "sum",
+        "Descongelado": "sum",
+        "Realizado": "sum"
+    })
+
+    df["Executado (%)"] = np.where(
+        df[col_previsto] > 0,
+        (df["Realizado"] / df[col_previsto]) * 100,
+        0
+    )
+
+    # ===============================
+    # 3️⃣ Separar Subprefeituras e Outros Órgãos
+    # ===============================
+    subprefeituras = df[df["Órgão"].str.contains("Subprefeitura", case=False, na=False)].copy()
+    outros_orgaos = df[~df["Órgão"].str.contains("Subprefeitura", case=False, na=False)].copy()
+
+    subprefeituras = subprefeituras.sort_values(["Órgão", "Projeto/Atividade"])
+    outros_orgaos = outros_orgaos.sort_values(["Órgão", "Projeto/Atividade"])
+
+    print(f"🔹 Subprefeituras encontradas: {subprefeituras['Órgão'].nunique()}")
+    print(f"🔹 Outros órgãos encontrados: {outros_orgaos['Órgão'].nunique()}")
+
+    # Nome das abas: 2025 sem sufixo, 2026 em diante com sufixo
+    sufixo = "" if ano_atual == 2025 else f" {ano_completo}"
+
+    # Função para formatar valores numéricos
+    def formatar_numeros(df_in, col_previsto):
+        df_fmt = df_in.copy()
+        for col in [col_previsto, "Orçado Atualizado", "Congelado", "Descongelado", "Realizado"]:
+            df_fmt[col] = df_fmt[col].map(lambda x: f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        return df_fmt
+
+    # ===============================
+    # 4️⃣ Atualizar aba: Detalhes_Subprefeituras
+    # ===============================
+    guia_sub = get_or_create_worksheet(planilha, f"Detalhes_Subprefeituras{sufixo}")
+    guia_sub.clear()
+    sub_fmt = formatar_numeros(subprefeituras, col_previsto)
+    guia_sub.update([sub_fmt.columns.tolist()] + sub_fmt.values.tolist())
+    print(f"✅ Aba 'Detalhes_Subprefeituras{sufixo}' atualizada!")
+
+    # ===============================
+    # 5️⃣ Atualizar aba: Detalhes_Outros_Orgaos
+    # ===============================
+    guia_outros = get_or_create_worksheet(planilha, f"Detalhes_Outros_Orgaos{sufixo}")
+    guia_outros.clear()
+    outros_fmt = formatar_numeros(outros_orgaos, col_previsto)
+    guia_outros.update([outros_fmt.columns.tolist()] + outros_fmt.values.tolist())
+    print(f"✅ Aba 'Detalhes_Outros_Orgaos{sufixo}' atualizada!")
+
+    # ===============================
+    # 6️⃣ Atualizar aba: Resumo_Programas
+    # ===============================
+    programas = df.groupby(["Órgão", "Programa"], as_index=False).agg({
+        col_previsto: "sum",
+        "Orçado Atualizado": "sum",
+        "Congelado": "sum",
+        "Descongelado": "sum",
+        "Realizado": "sum"
+    })
+    programas["Executado (%)"] = np.where(
+        programas[col_previsto] > 0,
+        (programas["Realizado"] / programas[col_previsto]) * 100,
+        0
+    )
+    programas = programas.replace([np.nan, np.inf, -np.inf], 0)
+
+    guia_prog = get_or_create_worksheet(planilha, f"Resumo_Programas{sufixo}")
+    guia_prog.clear()
+    prog_fmt = formatar_numeros(programas, col_previsto)
+    guia_prog.update([prog_fmt.columns.tolist()] + prog_fmt.values.tolist())
+    print(f"✅ Aba 'Resumo_Programas{sufixo}' atualizada!")
+
+print(f"\n🎯 Processo concluído para todos os anos!")
