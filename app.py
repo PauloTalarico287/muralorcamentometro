@@ -107,49 +107,88 @@ for ano_atual in [2025, 2026]:
     print(f"📅 Processando dados de {ano_completo}...")
     print(f"{'='*50}")
 
-    # Para 2025, começa em dezembro. Para outros anos, começa no mês atual
-    if ano_atual < datetime.now().year:
-        mes_tentativa = 12
-    else:
-        mes_tentativa = datetime.now().month
+    df = None
 
-    response = None
-
-    # Tentar meses de trás para frente até encontrar um arquivo disponível
-    while mes_tentativa >= 1:
-        mes = str(mes_tentativa).zfill(2)
-        url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
-        print(f"🔗 Tentando baixar: {url}")
-
+    # === 2026: URL fixa com CSV anual ===
+    if ano_atual == 2026:
+        url = "https://drive.prefeitura.sp.gov.br/cidade/secretarias/upload/seplan/arquivos/Exercicio_2026/basedadosexecucao_2026.csv"
+        print(f"🔗 Baixando arquivo anual de 2026: {url}")
         try:
-            response = requests.get(url, timeout=30)
-            if response.status_code == 200:
-                print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
-                break
+            response = requests.get(url, timeout=60)
+            if response.status_code != 200:
+                print(f"❌ Erro ao baixar arquivo de 2026: HTTP {response.status_code}")
+                continue
         except requests.exceptions.SSLError:
             print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            response = requests.get(url, timeout=30, verify=False)
-            if response.status_code == 200:
-                print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
-                break
+            try:
+                response = requests.get(url, timeout=60, verify=False)
+                if response.status_code != 200:
+                    print(f"❌ Erro ao baixar arquivo de 2026: HTTP {response.status_code}")
+                    continue
+            except Exception as e:
+                print(f"❌ Erro ao baixar arquivo de 2026: {e}")
+                continue
+        except Exception as e:
+            print(f"❌ Erro ao baixar arquivo de 2026: {e}")
+            continue
 
-        print(f"⚠️ Arquivo de {mes}/{ano_completo} não encontrado. Tentando mês anterior...")
-        mes_tentativa -= 1
+        excel_file = "basedadosexecucao_2026.csv"
+        with open(excel_file, "wb") as f:
+            f.write(response.content)
+        print(f"✅ Arquivo de 2026 baixado!")
 
-    # Se não encontrou nenhum arquivo do ano
-    if not response or response.status_code != 200:
-        print(f"❌ Nenhum arquivo de {ano_completo} encontrado. Pulando para o próximo ano...")
+        bytes_data = io.BytesIO(response.content)
+        df = pd.read_csv(bytes_data, sep=';', encoding='latin1', decimal=',')
+
+    # === 2025: busca mensal normal (xlsx) ===
+    else:
+        # Para anos passados começa em dezembro
+        if ano_atual < datetime.now().year:
+            mes_tentativa = 12
+        else:
+            mes_tentativa = datetime.now().month
+
+        response = None
+
+        while mes_tentativa >= 1:
+            mes = str(mes_tentativa).zfill(2)
+            url = f"https://orcamento.sf.prefeitura.sp.gov.br/orcamento/uploads/{ano_completo}/basedadosexecucao_{mes}{ano_curto}.xlsx"
+            print(f"🔗 Tentando baixar: {url}")
+
+            try:
+                response = requests.get(url, timeout=30)
+                if response.status_code == 200:
+                    print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+                    break
+            except requests.exceptions.SSLError:
+                print("⚠️ Certificado HTTPS expirado, tentando com verificação desativada...")
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                response = requests.get(url, timeout=30, verify=False)
+                if response.status_code == 200:
+                    print(f"✅ Arquivo encontrado: {mes}/{ano_completo}")
+                    break
+
+            print(f"⚠️ Arquivo de {mes}/{ano_completo} não encontrado. Tentando mês anterior...")
+            mes_tentativa -= 1
+
+        if not response or response.status_code != 200:
+            print(f"❌ Nenhum arquivo de {ano_completo} encontrado. Pulando para o próximo ano...")
+            continue
+
+        excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
+        with open(excel_file, "wb") as f:
+            f.write(response.content)
+        print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
+
+        bytes_data = io.BytesIO(response.content)
+        df = pd.read_excel(bytes_data)
+
+    if df is None:
+        print(f"❌ Não foi possível carregar dados de {ano_completo}. Pulando...")
         continue
 
-    # Salvar e processar o arquivo
-    excel_file = f"basedadosexecucao_{mes}{ano_curto}.xlsx"
-    with open(excel_file, "wb") as f:
-        f.write(response.content)
-    print(f"✅ Arquivo de {mes}/{ano_completo} baixado e salvo com sucesso!")
-
-    bytes_data = io.BytesIO(response.content)
-    df = pd.read_excel(bytes_data)
+    print(f"✅ Arquivo carregado! Total de linhas: {len(df)}")
 
     # Seleção das colunas principais
     orc = df[['Ds_Orgao', 'Vl_Orcado_Ano', 'Vl_Orcado_Atualizado', 'Vl_Congelado', 'Vl_Descongelado', 'Vl_Liquidado']]
